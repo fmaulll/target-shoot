@@ -1,22 +1,21 @@
 import { Sprite, Container } from "pixi.js";
 import { Screen } from "../utils/Screen";
-import { Target } from "../objects/Target";
 import { GameState } from "../game/GameState";
 import { Scene } from "./Scene";
 import { ControlPanel } from "../ui/ControlPanel";
-import { DifficultySelector } from "../ui/DifficultySelector";
+// import { DifficultySelector } from "../ui/DifficultySelector";
 import { Difficulty } from "../game/Difficulty";
 import { Gun } from "../objects/Gun";
 import { Crosshair } from "../objects/Crosshair";
 import { TargetManager } from "../managers/TargetManager";
+import { RoundManager } from "../managers/RoundManager";
+import { GameData } from "../game/GameData";
 
 export class GameplayScene extends Scene {
   constructor() {
     super();
 
     this.state = GameState.WAITING;
-
-    this.targetCount = 2;
 
     this.targetManager = new TargetManager();
 
@@ -30,6 +29,12 @@ export class GameplayScene extends Scene {
     this.gunTargetX = Screen.centerX;
 
     this.hasShot = false;
+
+    this.roundManager = new RoundManager();
+
+    this.currentDifficulty = Difficulty.EASY;
+
+    this.gameData = new GameData();
   }
 
   init() {
@@ -38,7 +43,7 @@ export class GameplayScene extends Scene {
     bg.width = Screen.width;
     bg.height = Screen.height;
 
-    console.log("Target Count:", this.targetCount);
+    console.log("Target Count:", this.currentDifficulty.targets);
     this.addChild(bg);
 
     this.addChild(this.targetManager);
@@ -59,48 +64,79 @@ export class GameplayScene extends Scene {
 
     this.controlPanel.setDifficulty("EASY");
 
-    this.controlPanel.setMultiplier(2);
+    this.controlPanel.setMultiplier(this.currentDifficulty.multiplierTable[0]);
 
     this.addChild(this.controlPanel);
 
-    this.difficultySelector = new DifficultySelector();
+    // this.difficultySelector = new DifficultySelector();
 
-    this.difficultySelector.x = 40;
+    // this.difficultySelector.x = 40;
 
-    this.difficultySelector.y = 240;
+    // this.difficultySelector.y = 240;
 
-    this.addChild(this.difficultySelector);
+    // this.addChild(this.difficultySelector);
 
-    this.difficultySelector.setOnDifficultyChanged((difficulty) => {
-      switch (difficulty) {
-        case "easy":
-          this.targetCount = Difficulty.EASY.targets;
-          this.controlPanel.setDifficulty("EASY");
+    // this.difficultySelector.setOnDifficultyChanged((difficulty) => {
+    //   switch (difficulty) {
+    //     case "easy":
+    //       this.currentDifficulty = Difficulty.EASY;
 
-          break;
+    //       this.controlPanel.setDifficulty("EASY");
 
-        case "medium":
-          this.targetCount = Difficulty.MEDIUM.targets;
-          this.controlPanel.setDifficulty("MEDIUM");
+    //       break;
 
-          break;
+    //     case "medium":
+    //       this.currentDifficulty = Difficulty.MEDIUM;
 
-        case "hard":
-          this.targetCount = Difficulty.HARD.targets;
-          this.controlPanel.setDifficulty("HARD");
+    //       this.controlPanel.setDifficulty("MEDIUM");
 
-          break;
-      }
+    //       break;
 
-      this.targetManager.createTargets(this.targetCount);
+    //     case "hard":
+    //       this.currentDifficulty = Difficulty.HARD;
 
-      this.setGameState(GameState.WAITING);
-    });
+    //       this.controlPanel.setDifficulty("HARD");
 
-    this.targetManager.createTargets(this.targetCount);
+    //       break;
+    //   }
+
+    //   this.targetManager.createTargets(this.currentDifficulty.targets);
+
+    //   this.setGameState(GameState.WAITING);
+    // });
+
+    this.targetManager.createTargets(this.currentDifficulty.targets);
 
     this.controlPanel.setOnStart(() => {
+      if (!this.gameData.canPlay()) {
+        alert("Not enough balance");
+
+        return;
+      }
+
+      this.gameData.placeBet();
+
+      this.controlPanel.setBalance(this.gameData.balance);
+
+      this.roundManager.start(this.currentDifficulty);
+
       this.setGameState(GameState.PLAYING);
+
+      this.controlPanel.hideStartButton();
+    });
+
+    this.controlPanel.setOnCollect(() => {
+      this.gameData.collect();
+
+      this.controlPanel.setBalance(this.gameData.balance);
+
+      this.controlPanel.setCurrentWin(0);
+
+      this.controlPanel.hideCollectButton();
+
+      this.controlPanel.showStartButton();
+
+      this.setGameState(GameState.WAITING);
     });
 
     this.setGameState(GameState.WAITING);
@@ -118,30 +154,63 @@ export class GameplayScene extends Scene {
     this.targetManager.setOnTargetSelected((id) => {
       this.selectTarget(id);
     });
+
+    this.controlPanel.setBalance(this.gameData.balance);
+
+    this.controlPanel.setBet(this.gameData.bet);
   }
 
-  showResult() {
+  showResult(id) {
+    const result = this.roundManager.shoot(id);
+
+    this.controlPanel.setMultiplier(result.multiplier);
+
     this.selectedTarget.hit();
 
     this.setGameState(GameState.RESULT);
 
+    if (result.win) {
+      this.roundManager.start(this.currentDifficulty);
+
+      this.gameData.calculateWin(result.multiplier);
+
+      this.controlPanel.setCurrentWin(this.gameData.currentWin);
+
+      this.controlPanel.showCollectButton();
+    } else {
+      this.controlPanel.hideCollectButton();
+    }
+
+    console.log(result);
+
     setTimeout(() => {
-      this.resetRound();
+      if (result.win) {
+        this.resetRound(true);
+      } else {
+        this.resetRound(false);
+      }
     }, 1000);
   }
 
-  resetRound() {
+  resetRound(continuePlaying) {
     this.hasShot = false;
 
     if (this.selectedTarget) {
       this.selectedTarget.setSelected(false);
-
       this.selectedTarget = null;
     }
 
     this.gunTargetX = Screen.centerX;
 
-    this.setGameState(GameState.WAITING);
+    if (continuePlaying) {
+      this.roundManager.start(this.currentDifficulty);
+
+      this.setGameState(GameState.PLAYING);
+    } else {
+      this.controlPanel.showStartButton();
+
+      this.setGameState(GameState.WAITING);
+    }
   }
 
   setGameState(state) {
@@ -194,13 +263,13 @@ export class GameplayScene extends Scene {
     this.setGameState(GameState.SHOOTING);
   }
 
-  shoot() {
+  shoot(id) {
     this.gun.y += 20;
 
     setTimeout(() => {
       this.gun.y -= 20;
 
-      this.showResult();
+      this.showResult(id);
     }, 100);
   }
 
@@ -219,7 +288,7 @@ export class GameplayScene extends Scene {
     ) {
       this.hasShot = true;
 
-      this.shoot();
+      this.shoot(this.selectedTarget.id);
     }
 
     this.targetManager.targets.forEach((target) => {

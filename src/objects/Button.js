@@ -1,29 +1,39 @@
 import { Container, Graphics, Text, TextStyle } from "pixi.js";
 
 export class Button extends Container {
-  constructor(label) {
+  constructor(options) {
     super();
+
+    const {
+      text = "Button",
+      width = 220,
+      height = 60,
+      radius = 12,
+      background = "#2ecc71",
+      fontSize = 28,
+      textColor = "white",
+    } = options;
 
     this.background = new Graphics();
 
-    this.background.roundRect(0, 0, 250, 70, 15);
+    this.background.roundRect(0, 0, width, height, radius);
 
-    this.background.fill("#2ecc71");
+    this.background.fill(background);
 
     this.addChild(this.background);
 
     this.text = new Text({
-      text: label,
+      text,
       style: new TextStyle({
-        fill: "white",
-        fontSize: 30,
+        fill: textColor,
+        fontSize,
       }),
     });
 
     this.text.anchor.set(0.5);
 
-    this.text.x = 125;
-    this.text.y = 35;
+    this.text.x = width / 2;
+    this.text.y = height / 2;
 
     this.addChild(this.text);
 
@@ -41,5 +51,12 @@ export class Button extends Container {
   }
   setOnClick(callback) {
     this.on("pointerdown", callback);
+  }
+  setText(text) {
+    this.text.text = text;
+
+    this.text.x = this.background.width / 2;
+
+    this.text.y = this.background.height / 2;
   }
 }
