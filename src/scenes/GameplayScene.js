@@ -14,8 +14,6 @@ export class GameplayScene extends Scene {
   constructor() {
     super();
 
-    this.targets = [];
-
     this.state = GameState.WAITING;
 
     this.targetCount = 2;
@@ -116,19 +114,34 @@ export class GameplayScene extends Scene {
     this.crosshair = new Crosshair();
 
     this.addChild(this.crosshair);
+
+    this.targetManager.setOnTargetSelected((id) => {
+      this.selectTarget(id);
+    });
   }
 
-  showResult(id) {
-    console.log("Reveal result for target:", id);
-
-    this.selectedTarget.sprite.tint = 0xff4444;
+  showResult() {
+    this.selectedTarget.hit();
 
     this.setGameState(GameState.RESULT);
 
     setTimeout(() => {
-      this.setGameState(GameState.WAITING);
-      this.gunTargetX = Screen.centerX;
+      this.resetRound();
     }, 1000);
+  }
+
+  resetRound() {
+    this.hasShot = false;
+
+    if (this.selectedTarget) {
+      this.selectedTarget.setSelected(false);
+
+      this.selectedTarget = null;
+    }
+
+    this.gunTargetX = Screen.centerX;
+
+    this.setGameState(GameState.WAITING);
   }
 
   setGameState(state) {
@@ -138,28 +151,28 @@ export class GameplayScene extends Scene {
 
     switch (state) {
       case GameState.WAITING:
-        this.targets.forEach((target) => {
+        this.targetManager.targets.forEach((target) => {
           target.setEnabled(false);
         });
 
         break;
 
       case GameState.PLAYING:
-        this.targets.forEach((target) => {
+        this.targetManager.targets.forEach((target) => {
           target.setEnabled(true);
         });
 
         break;
 
       case GameState.RESULT:
-        this.targets.forEach((target) => {
+        this.targetManager.targets.forEach((target) => {
           target.setEnabled(false);
         });
 
         break;
 
       case GameState.SHOOTING:
-        this.targets.forEach((target) => {
+        this.targetManager.targets.forEach((target) => {
           target.setEnabled(false);
         });
 
@@ -170,17 +183,15 @@ export class GameplayScene extends Scene {
   selectTarget(id) {
     if (this.selectedTarget) this.selectedTarget.setSelected(false);
 
-    this.selectedTarget = this.targets[id];
+    this.selectedTarget = this.targetManager.targets[id];
 
     this.gunTargetX = this.selectedTarget.x;
 
     this.selectedTarget.setSelected(true);
 
-    this.setGameState(GameState.SHOOTING);
+    this.hasShot = false;
 
-    setTimeout(() => {
-      this.shoot();
-    }, 300);
+    this.setGameState(GameState.SHOOTING);
   }
 
   shoot() {
@@ -189,7 +200,7 @@ export class GameplayScene extends Scene {
     setTimeout(() => {
       this.gun.y -= 20;
 
-      this.showResult(this.selectedTarget.id);
+      this.showResult();
     }, 100);
   }
 
@@ -210,6 +221,10 @@ export class GameplayScene extends Scene {
 
       this.shoot();
     }
+
+    this.targetManager.targets.forEach((target) => {
+      target.update();
+    });
 
     this.crosshair.x += (this.mouse.x - this.crosshair.x) * 0.35;
     this.crosshair.y += (this.mouse.y - this.crosshair.y) * 0.35;

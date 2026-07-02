@@ -21,11 +21,16 @@ export class TargetManager extends Container {
     for (let i = 0; i < count; i++) {
       const target = new Target(i);
 
+      target.setOnClick((id) => {
+        if (this.clickCallback) {
+          this.clickCallback(id);
+        }
+      });
+
       target.x = startX + i * spacing;
       target.y = Screen.centerY;
 
       this.targets.push(target);
-
       this.addChild(target);
     }
   }

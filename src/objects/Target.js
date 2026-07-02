@@ -36,7 +36,20 @@ export class Target extends Container {
     this.enabled = false;
 
     this.selected = false;
+
+    this.hitScale = 1;
   }
+
+  hit() {
+    this.sprite.tint = 0xff4444;
+
+    this.hitScale = 1.3;
+
+    setTimeout(() => {
+      this.sprite.tint = 0xffffff;
+    }, 150);
+  }
+
   setEnabled(value) {
     this.enabled = value;
   }
@@ -44,14 +57,16 @@ export class Target extends Container {
   setSelected(value) {
     this.selected = value;
 
-    if (value) {
-      this.sprite.tint = 0xffdd55;
-    } else {
-      this.sprite.tint = 0xffffff;
-    }
+    this.sprite.tint = value ? 0xffdd55 : 0xffffff;
   }
 
   setOnClick(callback) {
     this.clickCallback = callback;
+  }
+
+  update() {
+    this.hitScale += (1 - this.hitScale) * 0.15;
+
+    this.scale.set(this.hitScale);
   }
 }
