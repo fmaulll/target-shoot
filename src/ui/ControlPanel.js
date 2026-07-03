@@ -8,6 +8,26 @@ export class ControlPanel extends Container {
 
     this.panel = new Container();
 
+    this.balanceSection = new Container();
+
+    this.cashoutSection = new Container();
+
+    this.betSection = new Container();
+
+    this.difficultySection = new Container();
+
+    this.startSection = new Container();
+
+    this.panel.addChild(this.balanceSection);
+
+    this.panel.addChild(this.cashoutSection);
+
+    this.panel.addChild(this.betSection);
+
+    this.panel.addChild(this.difficultySection);
+
+    this.panel.addChild(this.startSection);
+
     this.addChild(this.panel);
 
     const style = new TextStyle({
@@ -15,12 +35,23 @@ export class ControlPanel extends Container {
       fontSize: 28,
     });
 
-    this.balanceText = new Text({
-      text: "Balance : ",
+    this.balanceLabel = new Text({
+      text: "BALANCE",
+      style: new TextStyle({
+        fill: "#AAAAAA",
+        fontSize: 18,
+        fontWeight: "bold",
+      }),
+    });
+
+    this.balanceSection.addChild(this.balanceLabel);
+
+    this.balanceValue = new Text({
+      text: "$1000",
       style,
     });
 
-    this.panel.addChild(this.balanceText);
+    this.balanceSection.addChild(this.balanceValue);
 
     this.betText = new Text({
       text: "Bet : ",
@@ -34,7 +65,7 @@ export class ControlPanel extends Container {
       fontSize: 26,
     });
 
-    this.panel.addChild(this.minusBetButton);
+    this.betSection.addChild(this.minusBetButton);
 
     this.betValueText = new Text({
       text: "10",
@@ -44,7 +75,7 @@ export class ControlPanel extends Container {
 
     this.betValueText.anchor.set(0.5);
 
-    this.panel.addChild(this.betValueText);
+    this.betSection.addChild(this.betValueText);
 
     this.plusBetButton = new Button({
       text: "+",
@@ -53,9 +84,9 @@ export class ControlPanel extends Container {
       fontSize: 26,
     });
 
-    this.panel.addChild(this.plusBetButton);
+    this.betSection.addChild(this.plusBetButton);
 
-    this.panel.addChild(this.betText);
+    this.betSection.addChild(this.betText);
 
     this.difficultyLabel = new Text({
       text: "DIFFICULTY",
@@ -66,7 +97,7 @@ export class ControlPanel extends Container {
       }),
     });
 
-    this.panel.addChild(this.difficultyLabel);
+    this.difficultySection.addChild(this.difficultyLabel);
 
     this.difficultyButton = new Button({
       text: "EASY ▼",
@@ -82,21 +113,34 @@ export class ControlPanel extends Container {
       }
     });
 
-    this.panel.addChild(this.difficultyButton);
+    this.difficultySection.addChild(this.difficultyButton);
 
-    this.multiplierText = new Text({
-      text: "Multiplier : ",
+    // this.multiplierText = new Text({
+    //   text: "Multiplier : ",
+    //   style,
+    // });
+
+    // this.panel.addChild(this.multiplierText);
+
+    this.cashoutLabel = new Text({
+      text: "CASH OUT",
+      style: new TextStyle({
+        fill: "#AAAAAA",
+        fontSize: 18,
+        fontWeight: "bold",
+      }),
+    });
+
+    // this.cashoutSection.addChild(this.cashoutLabel);
+
+    this.currentWinValue = new Text({
+      text: "$0.00",
       style,
     });
 
-    this.panel.addChild(this.multiplierText);
+    this.currentWinValue.visible = false;
 
-    this.currentWinText = new Text({
-      text: "Current Win : $0.00",
-      style,
-    });
-
-    this.panel.addChild(this.currentWinText);
+    this.cashoutSection.addChild(this.currentWinValue);
 
     this.stateText = new Text({
       text: `State: `,
@@ -113,20 +157,21 @@ export class ControlPanel extends Container {
       fontSize: 26,
     });
 
-    this.panel.addChild(this.startButton);
+    this.startSection.addChild(this.startButton);
 
     this.collectButton = new Button({
-      text: "COLLECT",
-      width: 180,
-      height: 60,
+      text: "CASHOUT",
+      // width: 180,
+      // height: 60,
       background: "#f1c40f",
       textColor: "#222222",
       fontSize: 24,
+      fontWeight: "bold",
     });
 
     this.collectButton.visible = false;
 
-    this.panel.addChild(this.collectButton);
+    this.cashoutSection.addChild(this.collectButton);
 
     this.startButton.setOnClick(() => {
       if (this.startCallback) {
@@ -152,9 +197,13 @@ export class ControlPanel extends Container {
       }
     });
 
+    const panelWidth = Screen.width * 0.9;
+
+    this.panelWidth = panelWidth;
+
     const bg = new Graphics();
 
-    bg.roundRect(0, 0, 1200, 160, 20);
+    bg.roundRect(0, 0, panelWidth, 160, 20);
 
     bg.fill({
       color: 0x000000,
@@ -163,67 +212,77 @@ export class ControlPanel extends Container {
 
     this.panel.addChildAt(bg, 0);
 
-    this.panel.x = Screen.centerX - 600;
-    this.panel.y = 430;
+    this.panel.x = (Screen.width - panelWidth) / 2;
+    this.panel.y = Screen.height - 180;
 
     let y = 20;
 
-    // ---------------------------
-    // BALANCE
-    // ---------------------------
+    // =====================
+    // SECTION POSITIONS
+    // =====================
 
-    this.balanceText.x = 30;
-    this.balanceText.y = 25;
+    const sections = [
+      this.balanceSection,
+      this.cashoutSection,
+      this.betSection,
+      this.difficultySection,
+      this.startSection,
+    ];
 
-    // ---------------------------
-    // CURRENT WIN
-    // ---------------------------
+    const sectionWidth = this.panelWidth / sections.length;
 
-    this.currentWinText.x = 30;
-    this.currentWinText.y = 75;
+    sections.forEach((section, index) => {
+      section.x = index * sectionWidth + 20;
+    });
 
-    // ---------------------------
-    // MULTIPLIER
-    // ---------------------------
+    this.balanceSection.y = 25;
 
-    this.multiplierText.x = 260;
-    this.multiplierText.y = 50;
+    this.cashoutSection.y = 25;
 
-    // ---------------------------
-    // BET
-    // ---------------------------
+    this.betSection.y = 20;
 
-    this.betText.x = 470;
-    this.betText.y = 20;
+    this.difficultySection.y = 20;
 
-    this.minusBetButton.x = 470;
-    this.minusBetButton.y = 65;
+    this.startSection.y = 25;
 
-    this.betValueText.x = 575;
-    this.betValueText.y = 88;
+    this.balanceLabel.x = 0;
+    this.balanceLabel.y = 0;
 
-    this.plusBetButton.x = 650;
-    this.plusBetButton.y = 65;
+    this.balanceValue.x = 0;
+    this.balanceValue.y = 28;
 
-    // ---------------------------
-    // DIFFICULTY
-    // ---------------------------
+    this.cashoutLabel.x = 0;
+    this.cashoutLabel.y = 0;
 
-    this.difficultyLabel.x = 760;
-    this.difficultyLabel.y = 18;
+    this.collectButton.x = 0;
+    this.collectButton.y = 28;
 
-    this.difficultyButton.x = 760;
-    this.difficultyButton.y = 55;
+    this.currentWinValue.x = 20;
+    this.currentWinValue.y = 95;
 
-    // ---------------------------
-    // BUTTONS
-    // ---------------------------
+    this.betText.x = 0;
+    this.betText.y = 0;
 
-    this.startButton.x = 980;
-    this.startButton.y = 30;
+    this.minusBetButton.x = 0;
+    this.minusBetButton.y = 40;
 
-    this.collectButton.x = 980;
-    this.collectButton.y = 30;
+    this.betValueText.x = 90;
+    this.betValueText.y = 65;
+
+    this.plusBetButton.x = 140;
+    this.plusBetButton.y = 40;
+
+    this.difficultyLabel.x = 0;
+    this.difficultyLabel.y = 0;
+
+    this.difficultyButton.x = 0;
+    this.difficultyButton.y = 35;
+
+    this.startButton.x = 0;
+    this.startButton.y = 0;
+
+    this.collectButton.x = 0;
+    this.collectButton.y = 0;
   }
 
   setOnStart(callback) {
@@ -243,19 +302,19 @@ export class ControlPanel extends Container {
   }
 
   setBalance(balance) {
-    this.balanceText.text = `Balance : $${balance}`;
+    this.balanceValue.text = `$${balance}`;
   }
 
   setBet(bet) {
     this.betText.text = `Bet : $${bet}`;
   }
 
-  setMultiplier(mult) {
-    this.multiplierText.text = `Multiplier : x${mult}`;
-  }
+  // setMultiplier(mult) {
+  //   this.multiplierText.text = `Multiplier : x${mult}`;
+  // }
 
   setCurrentWin(amount) {
-    this.currentWinText.text = `Current Win : $${amount.toFixed(2)}`;
+    this.currentWinValue.text = `$${amount.toFixed(2)}`;
   }
 
   setDifficulty(difficulty) {
@@ -284,6 +343,8 @@ export class ControlPanel extends Container {
 
   showCollectButton() {
     this.collectButton.visible = true;
+
+    this.currentWinValue.visible = true;
   }
 
   setOnCollect(callback) {
@@ -292,6 +353,8 @@ export class ControlPanel extends Container {
 
   hideCollectButton() {
     this.collectButton.visible = false;
+
+    this.currentWinValue.visible = false;
   }
 
   setBetValue(value) {

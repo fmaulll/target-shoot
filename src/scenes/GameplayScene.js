@@ -10,11 +10,14 @@ import { Crosshair } from "../objects/Crosshair";
 import { TargetManager } from "../managers/TargetManager";
 import { RoundManager } from "../managers/RoundManager";
 import { GameData } from "../game/GameData";
+import { BetManager } from "../game/BetManager";
 
 export class GameplayScene extends Scene {
   constructor() {
     super();
+    this.betValues = [10, 20, 50, 100, 200, 500, 1000];
 
+    this.betIndex = 0;
     this.state = GameState.WAITING;
 
     this.targetManager = new TargetManager();
@@ -32,9 +35,19 @@ export class GameplayScene extends Scene {
 
     this.roundManager = new RoundManager();
 
-    this.currentDifficulty = Difficulty.EASY;
-
     this.gameData = new GameData();
+
+    this.betManager = new BetManager();
+
+    // -------------------------
+    // DIFFICULTY SETTINGS
+    // -------------------------
+
+    this.difficulties = [Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD];
+
+    this.difficultyIndex = 0;
+
+    this.currentDifficulty = this.difficulties[0];
   }
 
   init() {
@@ -64,7 +77,7 @@ export class GameplayScene extends Scene {
 
     this.controlPanel.setDifficulty("EASY");
 
-    this.controlPanel.setMultiplier(this.currentDifficulty.multiplierTable[0]);
+    // this.controlPanel.setMultiplier(this.currentDifficulty.multiplierTable[0]);
 
     this.addChild(this.controlPanel);
 
@@ -158,12 +171,58 @@ export class GameplayScene extends Scene {
     this.controlPanel.setBalance(this.gameData.balance);
 
     this.controlPanel.setBet(this.gameData.bet);
+    this.controlPanel.setOnIncreaseBet(() => {
+      if (this.state !== GameState.WAITING) return;
+
+      if (this.betIndex < this.betValues.length - 1) {
+        this.betIndex++;
+      }
+
+      const bet = this.betValues[this.betIndex];
+
+      this.gameData.bet = bet;
+
+      this.controlPanel.setBetValue(bet);
+    });
+    this.controlPanel.setOnDecreaseBet(() => {
+      if (this.state !== GameState.WAITING) return;
+
+      if (this.betIndex > 0) {
+        this.betIndex--;
+      }
+
+      const bet = this.betValues[this.betIndex];
+
+      this.gameData.bet = bet;
+
+      this.controlPanel.setBetValue(bet);
+    });
+
+    this.controlPanel.setOnDifficulty(() => {
+      if (this.state !== GameState.WAITING) return;
+
+      this.difficultyIndex++;
+
+      if (this.difficultyIndex >= this.difficulties.length) {
+        this.difficultyIndex = 0;
+      }
+
+      this.currentDifficulty = this.difficulties[this.difficultyIndex];
+
+      const names = ["EASY", "MEDIUM", "HARD"];
+
+      this.controlPanel.setDifficulty(names[this.difficultyIndex]);
+
+      this.targetCount = this.currentDifficulty.targets;
+
+      this.targetManager.createTargets(this.currentDifficulty.targets);
+    });
   }
 
   showResult(id) {
     const result = this.roundManager.shoot(id);
 
-    this.controlPanel.setMultiplier(result.multiplier);
+    // this.controlPanel.setMultiplier(result.multiplier);
 
     this.selectedTarget.hit();
 
