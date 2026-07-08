@@ -6,7 +6,11 @@ export class ControlPanel extends Container {
   constructor() {
     super();
 
+    this.betPresetButtons = [];
+
     this.panel = new Container();
+
+    this.statsLayer = new Container();
 
     this.balanceSection = new Container();
 
@@ -18,6 +22,10 @@ export class ControlPanel extends Container {
 
     this.startSection = new Container();
 
+  this.addChild(this.statsLayer);
+
+  this.addChild(this.panel);
+
     this.panel.addChild(this.balanceSection);
 
     this.panel.addChild(this.cashoutSection);
@@ -28,35 +36,96 @@ export class ControlPanel extends Container {
 
     this.panel.addChild(this.startSection);
 
-    this.addChild(this.panel);
-
-    const style = new TextStyle({
-      fill: "white",
-      fontSize: 28,
+    const labelStyle = new TextStyle({
+      fill: "#f2f2f2",
+      fontSize: 18,
+      fontWeight: "bold",
     });
+
+    const valueStyle = new TextStyle({
+      fill: "#ffffff",
+      fontSize: 28,
+      fontWeight: "bold",
+    });
+
+    const topLabelStyle = new TextStyle({
+      fill: "#ffffff",
+      fontSize: 24,
+      fontWeight: "bold",
+    });
+
+    const topValueStyle = new TextStyle({
+      fill: "#f0c542",
+      fontSize: 30,
+      fontWeight: "bold",
+    });
+
+    const greenValueStyle = new TextStyle({
+      fill: "#7fe35d",
+      fontSize: 30,
+      fontWeight: "bold",
+    });
+
+    this.statsLayer.x = 24;
+    this.statsLayer.y = 20;
 
     this.balanceLabel = new Text({
-      text: "BALANCE",
-      style: new TextStyle({
-        fill: "#AAAAAA",
-        fontSize: 18,
-        fontWeight: "bold",
-      }),
+      text: "Balance :",
+      style: topLabelStyle,
     });
 
-    this.balanceSection.addChild(this.balanceLabel);
+    this.statsLayer.addChild(this.balanceLabel);
 
     this.balanceValue = new Text({
-      text: "$1000",
-      style,
+      text: "$1000.00",
+      style: topValueStyle,
     });
 
-    this.balanceSection.addChild(this.balanceValue);
+    this.statsLayer.addChild(this.balanceValue);
 
-    this.betText = new Text({
-      text: "Bet : ",
-      style,
+    this.currentWinLabel = new Text({
+      text: "Current Win :",
+      style: topLabelStyle,
     });
+
+    this.statsLayer.addChild(this.currentWinLabel);
+
+    this.currentWinValue = new Text({
+      text: "$0.00",
+      style: greenValueStyle,
+    });
+
+    this.currentWinValue.visible = true;
+
+    this.statsLayer.addChild(this.currentWinValue);
+
+    this.multiplierLabel = new Text({
+      text: "Multiplier :",
+      style: topLabelStyle,
+    });
+
+    this.statsLayer.addChild(this.multiplierLabel);
+
+    this.multiplierValue = new Text({
+      text: "x1.01",
+      style: greenValueStyle,
+    });
+
+    this.statsLayer.addChild(this.multiplierValue);
+
+    this.panelBalanceLabel = new Text({
+      text: "BALANCE",
+      style: labelStyle,
+    });
+
+    this.balanceSection.addChild(this.panelBalanceLabel);
+
+    this.panelBalanceValue = new Text({
+      text: "$1000.00",
+      style: valueStyle,
+    });
+
+    this.balanceSection.addChild(this.panelBalanceValue);
 
     this.minusBetButton = new Button({
       text: "-",
@@ -69,8 +138,7 @@ export class ControlPanel extends Container {
 
     this.betValueText = new Text({
       text: "10",
-
-      style,
+      style: valueStyle,
     });
 
     this.betValueText.anchor.set(0.5);
@@ -86,15 +154,9 @@ export class ControlPanel extends Container {
 
     this.betSection.addChild(this.plusBetButton);
 
-    this.betSection.addChild(this.betText);
-
     this.difficultyLabel = new Text({
       text: "DIFFICULTY",
-      style: new TextStyle({
-        fill: "#AAAAAA",
-        fontSize: 18,
-        fontWeight: "bold",
-      }),
+      style: labelStyle,
     });
 
     this.difficultySection.addChild(this.difficultyLabel);
@@ -115,58 +177,23 @@ export class ControlPanel extends Container {
 
     this.difficultySection.addChild(this.difficultyButton);
 
-    // this.multiplierText = new Text({
-    //   text: "Multiplier : ",
-    //   style,
-    // });
-
-    // this.panel.addChild(this.multiplierText);
-
-    this.cashoutLabel = new Text({
-      text: "CASH OUT",
-      style: new TextStyle({
-        fill: "#AAAAAA",
-        fontSize: 18,
-        fontWeight: "bold",
-      }),
-    });
-
-    // this.cashoutSection.addChild(this.cashoutLabel);
-
-    this.currentWinValue = new Text({
-      text: "$0.00",
-      style,
-    });
-
-    this.currentWinValue.visible = false;
-
-    this.cashoutSection.addChild(this.currentWinValue);
-
-    this.stateText = new Text({
-      text: `State: `,
-      style,
-    });
-
-    // this.panel.addChild(this.stateText);
-
     this.startButton = new Button({
       text: "START",
       width: 180,
       height: 60,
-      background: "#2ecc71",
+      background: "#47b83a",
       fontSize: 26,
     });
 
     this.startSection.addChild(this.startButton);
 
     this.collectButton = new Button({
-      text: "CASHOUT",
-      // width: 180,
-      // height: 60,
-      background: "#f1c40f",
-      textColor: "#222222",
+      text: "COLLECT",
+      width: 180,
+      height: 60,
+      background: "#f1b81a",
+      textColor: "#202020",
       fontSize: 24,
-      fontWeight: "bold",
     });
 
     this.collectButton.visible = false;
@@ -197,25 +224,32 @@ export class ControlPanel extends Container {
       }
     });
 
-    const panelWidth = Screen.width * 0.9;
+    const panelWidth = Screen.width - 32;
+    const panelHeight = 176;
 
     this.panelWidth = panelWidth;
 
+    this.panelHeight = panelHeight;
+
     const bg = new Graphics();
 
-    bg.roundRect(0, 0, panelWidth, 160, 20);
+    bg.roundRect(0, 0, panelWidth, panelHeight, 18);
 
     bg.fill({
-      color: 0x000000,
-      alpha: 0.65,
+      color: 0x111417,
+      alpha: 0.94,
+    });
+
+    bg.stroke({
+      color: 0xd8a73c,
+      width: 2,
+      alpha: 0.9,
     });
 
     this.panel.addChildAt(bg, 0);
 
-    this.panel.x = (Screen.width - panelWidth) / 2;
-    this.panel.y = Screen.height - 180;
-
-    let y = 20;
+    this.panel.x = 16;
+    this.panel.y = Screen.height - panelHeight - 14;
 
     // =====================
     // SECTION POSITIONS
@@ -235,54 +269,114 @@ export class ControlPanel extends Container {
       section.x = index * sectionWidth + 20;
     });
 
-    this.balanceSection.y = 25;
+    this.balanceSection.y = 24;
 
-    this.cashoutSection.y = 25;
+    this.cashoutSection.y = 24;
 
     this.betSection.y = 20;
 
     this.difficultySection.y = 20;
 
-    this.startSection.y = 25;
+    this.startSection.y = 24;
 
-    this.balanceLabel.x = 0;
-    this.balanceLabel.y = 0;
+    this.balanceLabel.x = 64;
+    this.balanceLabel.y = 6;
 
-    this.balanceValue.x = 0;
-    this.balanceValue.y = 28;
+    this.balanceValue.x = 64;
+    this.balanceValue.y = 34;
 
-    this.cashoutLabel.x = 0;
-    this.cashoutLabel.y = 0;
+    this.currentWinLabel.x = 0;
+    this.currentWinLabel.y = 0;
 
-    this.collectButton.x = 0;
-    this.collectButton.y = 28;
+    this.currentWinValue.x = 0;
+    this.currentWinValue.y = 30;
 
-    this.currentWinValue.x = 20;
-    this.currentWinValue.y = 95;
+    this.multiplierLabel.x = 0;
+    this.multiplierLabel.y = 62;
 
-    this.betText.x = 0;
-    this.betText.y = 0;
+    this.multiplierValue.x = 128;
+    this.multiplierValue.y = 62;
 
     this.minusBetButton.x = 0;
-    this.minusBetButton.y = 40;
+    this.minusBetButton.y = 44;
 
     this.betValueText.x = 90;
-    this.betValueText.y = 65;
+    this.betValueText.y = 67;
 
     this.plusBetButton.x = 140;
-    this.plusBetButton.y = 40;
+    this.plusBetButton.y = 44;
 
     this.difficultyLabel.x = 0;
     this.difficultyLabel.y = 0;
 
     this.difficultyButton.x = 0;
-    this.difficultyButton.y = 35;
+    this.difficultyButton.y = 38;
 
     this.startButton.x = 0;
     this.startButton.y = 0;
 
     this.collectButton.x = 0;
     this.collectButton.y = 0;
+
+    this.balanceIcon = new Graphics();
+    this.balanceIcon.circle(26, 26, 22);
+    this.balanceIcon.fill({ color: 0x2a2a2a, alpha: 1 });
+    this.balanceIcon.stroke({ color: 0xf0c542, width: 2, alpha: 1 });
+    this.balanceSection.addChild(this.balanceIcon);
+
+    this.balanceSymbol = new Text({
+      text: "$",
+      style: new TextStyle({
+        fill: "#f0c542",
+        fontSize: 26,
+        fontWeight: "bold",
+      }),
+    });
+    this.balanceSymbol.anchor.set(0.5);
+    this.balanceSymbol.x = 26;
+    this.balanceSymbol.y = 26;
+    this.balanceSection.addChild(this.balanceSymbol);
+
+    this.panelBalanceLabel.x = 60;
+    this.panelBalanceLabel.y = 6;
+
+    this.panelBalanceValue.x = 60;
+    this.panelBalanceValue.y = 34;
+
+    this.betLabel = new Text({
+      text: "BET",
+      style: labelStyle,
+    });
+
+    this.betSection.addChild(this.betLabel);
+
+    this.betLabel.x = 84;
+    this.betLabel.y = 0;
+
+    this.betPresetGroup = new Container();
+    this.betSection.addChild(this.betPresetGroup);
+
+    this.betPresetGroup.y = 122;
+
+    this.setBetPresets([10, 20, 50, 100, 200]);
+
+    this.panelSeparators = new Graphics();
+    this.panelSeparators.lineStyle = undefined;
+    this.panelSeparators.rect(0, 0, 1, 1);
+
+    const separator = (x) => {
+      const line = new Graphics();
+      line.roundRect(0, 0, 1, panelHeight - 34, 1);
+      line.fill({ color: 0xffffff, alpha: 0.05 });
+      line.x = x;
+      line.y = 17;
+      this.panel.addChild(line);
+    };
+
+    separator(sectionWidth);
+    separator(sectionWidth * 2);
+    separator(sectionWidth * 3);
+    separator(sectionWidth * 4);
   }
 
   setOnStart(callback) {
@@ -301,20 +395,28 @@ export class ControlPanel extends Container {
     this.decreaseBetCallback = callback;
   }
 
+  setOnBetPreset(callback) {
+    this.betPresetCallback = callback;
+  }
+
   setBalance(balance) {
-    this.balanceValue.text = `$${balance}`;
+    const formatted = `$${Number(balance).toFixed(2)}`;
+
+    this.balanceValue.text = formatted;
+
+    this.panelBalanceValue.text = formatted;
   }
 
   setBet(bet) {
-    this.betText.text = `Bet : $${bet}`;
+    this.setBetValue(bet);
   }
-
-  // setMultiplier(mult) {
-  //   this.multiplierText.text = `Multiplier : x${mult}`;
-  // }
 
   setCurrentWin(amount) {
     this.currentWinValue.text = `$${amount.toFixed(2)}`;
+  }
+
+  setMultiplier(mult) {
+    this.multiplierValue.text = `x${Number(mult).toFixed(2)}`;
   }
 
   setDifficulty(difficulty) {
@@ -322,15 +424,7 @@ export class ControlPanel extends Container {
   }
 
   setState(state) {
-    const names = {
-      waiting: "Waiting",
-      playing: "Playing",
-      shooting: "Shooting",
-      result: "Result",
-    };
-
-    this.stateText.text = `Status : ${names[state]}`;
-    this.stateText.visible = false;
+    this.state = state;
   }
 
   hideStartButton() {
@@ -343,8 +437,6 @@ export class ControlPanel extends Container {
 
   showCollectButton() {
     this.collectButton.visible = true;
-
-    this.currentWinValue.visible = true;
   }
 
   setOnCollect(callback) {
@@ -353,11 +445,62 @@ export class ControlPanel extends Container {
 
   hideCollectButton() {
     this.collectButton.visible = false;
-
-    this.currentWinValue.visible = false;
   }
 
   setBetValue(value) {
-    this.betValueText.text = value;
+    this.betValueText.text = `${value}`;
+
+    this.highlightBetPreset(value);
+  }
+
+  setBetPresets(values) {
+    this.betPresetValues = values.slice();
+
+    this.betPresetButtons.forEach((button) => {
+      if (button.parent) {
+        button.parent.removeChild(button);
+      }
+    });
+
+    this.betPresetButtons = [];
+
+    const chipGap = 10;
+
+    values.forEach((value, index) => {
+      const chip = new Button({
+        text: `${value}`,
+        width: 50,
+        height: 30,
+        radius: 8,
+        background: index === 0 ? "#f0c542" : "#232528",
+        textColor: index === 0 ? "#161616" : "#ffffff",
+        fontSize: 18,
+      });
+
+      chip.betValue = value;
+      chip.x = index * (50 + chipGap);
+      chip.y = 0;
+
+      chip.setOnClick(() => {
+        if (this.betPresetCallback) {
+          this.betPresetCallback(value);
+        }
+      });
+
+      this.betPresetButtons.push(chip);
+      this.betPresetGroup.addChild(chip);
+    });
+
+    this.highlightBetPreset(this.betValueText.text);
+  }
+
+  highlightBetPreset(value) {
+    const normalizedValue = Number(value);
+
+    this.betPresetButtons.forEach((button) => {
+      const isActive = Number(button.betValue) === normalizedValue;
+
+      button.alpha = isActive ? 1 : 0.65;
+    });
   }
 }

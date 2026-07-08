@@ -75,6 +75,10 @@ export class GameplayScene extends Scene {
 
     this.controlPanel.setBet(10);
 
+    this.controlPanel.setCurrentWin(0);
+
+    this.controlPanel.setMultiplier(this.currentDifficulty.multiplierTable[0]);
+
     this.controlPanel.setDifficulty("EASY");
 
     // this.controlPanel.setMultiplier(this.currentDifficulty.multiplierTable[0]);
@@ -127,9 +131,17 @@ export class GameplayScene extends Scene {
         return;
       }
 
+      this.roundManager.streak = 0;
+
       this.gameData.placeBet();
 
       this.controlPanel.setBalance(this.gameData.balance);
+
+      this.controlPanel.setCurrentWin(0);
+
+      this.controlPanel.setMultiplier(
+        this.currentDifficulty.multiplierTable[0]
+      );
 
       this.roundManager.start(this.currentDifficulty);
 
@@ -198,6 +210,22 @@ export class GameplayScene extends Scene {
       this.controlPanel.setBetValue(bet);
     });
 
+    this.controlPanel.setBetPresets(this.betValues.slice(0, 5));
+
+    this.controlPanel.setOnBetPreset((bet) => {
+      if (this.state !== GameState.WAITING) return;
+
+      const index = this.betValues.indexOf(bet);
+
+      if (index === -1) return;
+
+      this.betIndex = index;
+
+      this.gameData.bet = bet;
+
+      this.controlPanel.setBetValue(bet);
+    });
+
     this.controlPanel.setOnDifficulty(() => {
       if (this.state !== GameState.WAITING) return;
 
@@ -235,8 +263,14 @@ export class GameplayScene extends Scene {
 
       this.controlPanel.setCurrentWin(this.gameData.currentWin);
 
+      this.controlPanel.setMultiplier(result.multiplier);
+
       this.controlPanel.showCollectButton();
     } else {
+      this.controlPanel.setCurrentWin(0);
+
+      this.controlPanel.setMultiplier(this.currentDifficulty.multiplierTable[0]);
+
       this.controlPanel.hideCollectButton();
     }
 
@@ -266,6 +300,10 @@ export class GameplayScene extends Scene {
 
       this.setGameState(GameState.PLAYING);
     } else {
+      this.controlPanel.setCurrentWin(0);
+
+      this.controlPanel.setMultiplier(this.currentDifficulty.multiplierTable[0]);
+
       this.controlPanel.showStartButton();
 
       this.setGameState(GameState.WAITING);
