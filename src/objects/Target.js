@@ -7,7 +7,9 @@ export class Target extends Container {
 
     this.sprite = Sprite.from("target");
     this.sprite.anchor.set(0.5);
-    this.sprite.scale = 0.2;
+    this.baseScale = 0.2;
+    this.sprite.scale.set(1);
+    this.scale.set(this.baseScale);
 
     this.addChild(this.sprite);
 
@@ -64,9 +66,14 @@ export class Target extends Container {
     this.clickCallback = callback;
   }
 
+  setBaseScale(scale) {
+    this.baseScale = scale;
+    this.scale.set(this.baseScale * this.hitScale);
+  }
+
   update() {
     this.hitScale += (1 - this.hitScale) * 0.15;
 
-    this.scale.set(this.hitScale);
+    this.scale.set(this.baseScale * this.hitScale);
   }
 }

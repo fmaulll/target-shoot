@@ -1,4 +1,5 @@
 import { Container, Sprite } from "pixi.js";
+import { Screen } from "../utils/Screen";
 
 export class Crosshair extends Container {
 
@@ -16,6 +17,12 @@ export class Crosshair extends Container {
 
         this.addChild(this.sprite);
 
+    }
+
+    setResponsiveScale() {
+        const scale = Screen.clamp(Screen.shortEdge / 900 * 0.025, 0.018, 0.035);
+
+        this.sprite.scale.set(scale);
     }
 
 }

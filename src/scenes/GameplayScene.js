@@ -2,7 +2,7 @@ import { Sprite, Container } from "pixi.js";
 import { Screen } from "../utils/Screen";
 import { GameState } from "../game/GameState";
 import { Scene } from "./Scene";
-import { ControlPanel } from "../ui/ControlPanel";
+import { HtmlControlPanelAdapter } from "../ui/HtmlControlPanelAdapter";
 // import { DifficultySelector } from "../ui/DifficultySelector";
 import { Difficulty } from "../game/Difficulty";
 import { Gun } from "../objects/Gun";
@@ -51,25 +51,20 @@ export class GameplayScene extends Scene {
   }
 
   init() {
-    const bg = Sprite.from("background");
+    this.bg = Sprite.from("background");
 
-    bg.width = Screen.width;
-    bg.height = Screen.height;
+    this.layoutScene();
 
     console.log("Target Count:", this.currentDifficulty.targets);
-    this.addChild(bg);
+    this.addChild(this.bg);
 
     this.addChild(this.targetManager);
 
     this.gun = new Gun();
 
-    this.gun.x = Screen.centerX + 200;
-
-    this.gun.y = Screen.height - 50;
-
     this.addChild(this.gun);
 
-    this.controlPanel = new ControlPanel(this.state);
+    this.controlPanel = new HtmlControlPanelAdapter(this.state);
 
     this.controlPanel.setBalance(1000);
 
@@ -84,6 +79,25 @@ export class GameplayScene extends Scene {
     // this.controlPanel.setMultiplier(this.currentDifficulty.multiplierTable[0]);
 
     this.addChild(this.controlPanel);
+
+    this.onResize = () => {
+      this.layoutScene();
+
+      this.controlPanel.applyResponsiveLayout();
+
+      this.targetManager.createTargets(
+        this.currentDifficulty.targets,
+        this.getPanelTop()
+      );
+
+      this.layoutScene();
+
+      if (!this.selectedTarget) {
+        this.gunTargetX = Screen.centerX;
+      }
+    };
+
+    window.addEventListener("resize", this.onResize);
 
     // this.difficultySelector = new DifficultySelector();
 
@@ -122,9 +136,16 @@ export class GameplayScene extends Scene {
     //   this.setGameState(GameState.WAITING);
     // });
 
-    this.targetManager.createTargets(this.currentDifficulty.targets);
+    this.targetManager.createTargets(
+      this.currentDifficulty.targets,
+      this.getPanelTop()
+    );
 
     this.controlPanel.setOnStart(() => {
+      if (this.state !== GameState.WAITING) {
+        return;
+      }
+
       if (!this.gameData.canPlay()) {
         alert("Not enough balance");
 
@@ -147,10 +168,14 @@ export class GameplayScene extends Scene {
 
       this.setGameState(GameState.PLAYING);
 
-      this.controlPanel.hideStartButton();
+      this.controlPanel.hideCollectButton();
     });
 
     this.controlPanel.setOnCollect(() => {
+      if (this.state === GameState.WAITING) {
+        return;
+      }
+
       this.gameData.collect();
 
       this.controlPanel.setBalance(this.gameData.balance);
@@ -175,6 +200,8 @@ export class GameplayScene extends Scene {
     this.crosshair = new Crosshair();
 
     this.addChild(this.crosshair);
+
+    this.layoutScene();
 
     this.targetManager.setOnTargetSelected((id) => {
       this.selectTarget(id);
@@ -243,8 +270,64 @@ export class GameplayScene extends Scene {
 
       this.targetCount = this.currentDifficulty.targets;
 
-      this.targetManager.createTargets(this.currentDifficulty.targets);
+      this.targetManager.createTargets(
+        this.currentDifficulty.targets,
+        this.getPanelTop()
+      );
     });
+
+    this.controlPanel.setOnSetDifficulty((difficultyName) => {
+      if (this.state !== GameState.WAITING) return;
+
+      const difficultyMap = {
+        EASY: 0,
+        MEDIUM: 1,
+        HARD: 2,
+      };
+
+      const nextIndex = difficultyMap[difficultyName];
+
+      if (nextIndex === undefined) {
+        return;
+      }
+
+      this.difficultyIndex = nextIndex;
+      this.currentDifficulty = this.difficulties[this.difficultyIndex];
+
+      this.controlPanel.setDifficulty(difficultyName);
+
+      this.targetManager.createTargets(
+        this.currentDifficulty.targets,
+        this.getPanelTop()
+      );
+    });
+
+    this.controlPanel.setOnSetBet((betValue) => {
+      if (this.state !== GameState.WAITING) return;
+
+      const normalizedBet = Math.max(0.01, Math.round(Number(betValue) * 100) / 100);
+
+      this.gameData.bet = normalizedBet;
+      this.betIndex = this.getClosestBetIndex(normalizedBet);
+
+      this.controlPanel.setBetValue(normalizedBet);
+    });
+  }
+
+  getClosestBetIndex(value) {
+    let closestIndex = 0;
+    let smallestDiff = Number.POSITIVE_INFINITY;
+
+    this.betValues.forEach((bet, index) => {
+      const diff = Math.abs(bet - value);
+
+      if (diff < smallestDiff) {
+        smallestDiff = diff;
+        closestIndex = index;
+      }
+    });
+
+    return closestIndex;
   }
 
   showResult(id) {
@@ -396,5 +479,49 @@ export class GameplayScene extends Scene {
     this.crosshair.y += (this.mouse.y - this.crosshair.y) * 0.35;
   }
 
-  destroyScene() {}
+  layoutScene() {
+    if (this.bg) {
+      this.bg.width = Screen.width;
+      this.bg.height = Screen.height;
+    }
+
+    if (this.gun) {
+      const rightOffset = Screen.clamp(Screen.width * 0.12, 90, 220);
+      const bottomOffset = Screen.clamp(Screen.height * 0.05, 30, 60);
+      const panelTop = this.getPanelTop();
+      const maxGunY = panelTop - bottomOffset;
+
+      this.gun.x = Screen.centerX + rightOffset;
+      this.gun.y = Math.min(Screen.height - bottomOffset, maxGunY);
+      this.gun.setResponsiveScale();
+    }
+
+    if (this.crosshair) {
+      this.crosshair.setResponsiveScale();
+    }
+
+    if (!this.selectedTarget) {
+      this.gunTargetX = Screen.centerX;
+    }
+  }
+
+  getPanelTop() {
+    if (!this.controlPanel || !this.controlPanel.panel) {
+      return Screen.height;
+    }
+
+    return this.controlPanel.panel.y;
+  }
+
+  destroyScene() {
+    if (this.onResize) {
+      window.removeEventListener("resize", this.onResize);
+    }
+
+    if (this.controlPanel?.destroyAdapter) {
+      this.controlPanel.destroyAdapter();
+    }
+
+    this.removeAllListeners();
+  }
 }

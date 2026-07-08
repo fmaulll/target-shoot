@@ -1,4 +1,5 @@
 import { Container, Sprite } from "pixi.js";
+import { Screen } from "../utils/Screen";
 
 export class Gun extends Container {
 
@@ -15,6 +16,12 @@ export class Gun extends Container {
 
         this.addChild(this.sprite);
 
+    }
+
+    setResponsiveScale() {
+        const scale = Screen.clamp(Screen.shortEdge / 900 * 0.5, 0.34, 0.62);
+
+        this.sprite.scale.set(scale);
     }
 
 }
