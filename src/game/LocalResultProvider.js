@@ -1,5 +1,3 @@
-import { ResultProvider } from "./ResultProvider";
-
 export class LocalResultProvider {
   getResult(difficulty, streak, selectedTarget) {
     const probabilities = {

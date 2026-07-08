@@ -50,6 +50,12 @@ export class RoundManager {
 
     getMultiplier(){
 
+        if (this.streak <= 0) {
+
+            return 1;
+
+        }
+
         const index = Math.min(
 
             this.streak - 1,
