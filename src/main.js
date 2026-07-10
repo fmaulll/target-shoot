@@ -21,17 +21,58 @@ appRoot.style.height = "100vh";
 appRoot.style.overflow = "hidden";
 
 appRoot.innerHTML = `
-  <div id="game-shell" style="width:100%; height:100%; background:#000;">
-    <div id="canvas-host" style="position:relative; width:100%; height:100%; overflow:hidden;">
-      <div id="controls-root" style="position:absolute; inset:0; pointer-events:none; z-index:20;"></div>
+  <style>
+    #game-shell {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: 3fr 1fr;
+      background: #000;
+    }
+
+    #canvas-host {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #hud-root {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    #controls-root {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 3;
+    }
+
+    @media (max-width: 900px) {
+      #game-shell {
+        grid-template-rows: 2.5fr 1.5fr;
+      }
+    }
+  </style>
+  <div id="game-shell">
+    <div id="canvas-host">
+      <div id="hud-root"></div>
     </div>
+    <div id="controls-root"></div>
   </div>
 `;
 
 const canvasHost = document.getElementById("canvas-host");
+const hudRootElement = document.getElementById("hud-root");
 const controlsRootElement = document.getElementById("controls-root");
 
-createRoot(controlsRootElement).render(React.createElement(GameControlPanel));
+createRoot(controlsRootElement).render(
+  React.createElement(GameControlPanel, { hudRootElement }),
+);
 
 canvasHost.appendChild(app.canvas);
 

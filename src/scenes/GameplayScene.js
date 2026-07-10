@@ -481,8 +481,14 @@ export class GameplayScene extends Scene {
 
   layoutScene() {
     if (this.bg) {
-      this.bg.width = Screen.width;
-      this.bg.height = Screen.height;
+      const textureWidth = this.bg.texture?.orig?.width || this.bg.texture?.width || Screen.width;
+      const textureHeight = this.bg.texture?.orig?.height || this.bg.texture?.height || Screen.height;
+      const scale = Math.max(Screen.width / textureWidth, Screen.height / textureHeight);
+
+      this.bg.anchor.set(0.5, 1);
+      this.bg.scale.set(scale);
+      this.bg.x = Screen.centerX;
+      this.bg.y = Screen.height;
     }
 
     if (this.gun) {

@@ -3,13 +3,13 @@ import { Assets } from "pixi.js";
 export class AssetManager {
   static async load() {
     Assets.add({
-      alias: "target",
-      src: "/images/Target.png",
+      alias: "barrelSheet",
+      src: "/images/Barrel.json",
     });
 
     Assets.add({
       alias: "background",
-      src: "/images/Background.png",
+      src: "/images/Background-Cowboy.png",
     });
 
     Assets.add({
@@ -22,6 +22,6 @@ export class AssetManager {
       src: "/images/Crosshair.png",
     });
 
-    await Assets.load(["background", "target", "gun", "crosshair"]);
+    await Assets.load(["background", "barrelSheet", "gun", "crosshair"]);
   }
 }

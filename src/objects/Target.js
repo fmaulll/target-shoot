@@ -1,11 +1,37 @@
-import { Container, Sprite } from "pixi.js";
+import { AnimatedSprite, Assets, Container, Sprite } from "pixi.js";
 
 export class Target extends Container {
   constructor(id) {
     super();
     this.id = id;
 
-    this.sprite = Sprite.from("target");
+    this.isBroken = false;
+
+    const barrelSheet = Assets.get("barrelSheet");
+    const barrelFrames = [
+      "Sprite-0003 0.",
+      "Sprite-0003 1.",
+      "Sprite-0003 2.",
+      "Sprite-0003 3.",
+    ];
+
+    if (barrelSheet?.textures) {
+      const animationTextures = barrelFrames
+        .map((frameName) => barrelSheet.textures[frameName])
+        .filter(Boolean);
+
+      if (animationTextures.length) {
+        this.sprite = new AnimatedSprite(animationTextures);
+        this.sprite.loop = false;
+        this.sprite.animationSpeed = 0.22;
+        this.sprite.gotoAndStop(0);
+      } else {
+        this.sprite = Sprite.from("target");
+      }
+    } else {
+      this.sprite = Sprite.from("target");
+    }
+
     this.sprite.anchor.set(0.5);
     this.baseScale = 0.2;
     this.sprite.scale.set(1);
@@ -43,13 +69,20 @@ export class Target extends Container {
   }
 
   hit() {
-    this.sprite.tint = 0xff4444;
+    this.isBroken = true;
 
-    this.hitScale = 1.3;
-
-    setTimeout(() => {
+    if (this.sprite instanceof AnimatedSprite) {
       this.sprite.tint = 0xffffff;
-    }, 150);
+      this.sprite.gotoAndPlay(1);
+    } else {
+      this.sprite.tint = 0xff4444;
+
+      setTimeout(() => {
+        this.sprite.tint = 0xffffff;
+      }, 150);
+    }
+
+    this.hitScale = 1;
   }
 
   setEnabled(value) {
@@ -58,6 +91,14 @@ export class Target extends Container {
 
   setSelected(value) {
     this.selected = value;
+
+    if (!value && this.isBroken) {
+      if (this.sprite instanceof AnimatedSprite) {
+        this.sprite.gotoAndStop(0);
+      }
+
+      this.isBroken = false;
+    }
 
     this.sprite.tint = value ? 0xffdd55 : 0xffffff;
   }

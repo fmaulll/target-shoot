@@ -19,7 +19,10 @@ export class Gun extends Container {
     }
 
     setResponsiveScale() {
-        const scale = Screen.clamp(Screen.shortEdge / 900 * 0.5, 0.34, 0.62);
+        const baseScale = Screen.shortEdge / 900 * 0.5;
+        const scale = Screen.isPortrait
+            ? Screen.clamp(baseScale * 0.62, 0.18, 0.34)
+            : Screen.clamp(baseScale, 0.34, 0.62);
 
         this.sprite.scale.set(scale);
     }
