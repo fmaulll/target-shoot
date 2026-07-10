@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   dispatchUiAction,
   getUiState,
@@ -14,7 +15,7 @@ function formatNumber(value) {
   return Number(value).toFixed(2);
 }
 
-export function GameControlPanel() {
+export function GameControlPanel({ hudRootElement = null }) {
   const [state, setState] = useState(getUiState());
   const [betInput, setBetInput] = useState(String(getUiState().bet));
   const [isDifficultyMenuOpen, setIsDifficultyMenuOpen] = useState(false);
@@ -80,29 +81,32 @@ export function GameControlPanel() {
     dispatchUiAction("SET_BET", normalizedBet);
   };
 
-  return (
-    <div className="game-ui-overlay">
-      <div className="game-hud-top">
-        <div className="hud-chip-row">
-          <div className="hud-chip">
-            <span className="hud-chip-label">Current Win</span>
-            <span className="hud-chip-value hud-chip-value-win">
-              {formatMoney(state.currentWin)}
-            </span>
-          </div>
-          <div className="hud-chip">
-            <span className="hud-chip-label">Multiplier</span>
-            <span className="hud-chip-value hud-chip-value-win">
-              x{Number(state.multiplier).toFixed(2)}
-            </span>
-          </div>
+  const hud = (
+    <div className="game-hud-top">
+      <div className="hud-chip-row">
+        <div className="hud-chip">
+          <span className="hud-chip-label">Current Win</span>
+          <span className="hud-chip-value hud-chip-value-win">
+            {formatMoney(state.currentWin)}
+          </span>
         </div>
-        <div className="balance-pill">
-          <span className="balance-pill-label">Balance</span>
-          <span className="balance-pill-value">{formatMoney(state.balance)}</span>
+        <div className="hud-chip">
+          <span className="hud-chip-label">Multiplier</span>
+          <span className="hud-chip-value hud-chip-value-win">
+            x{Number(state.multiplier).toFixed(2)}
+          </span>
         </div>
       </div>
+      <div className="hud-chip">
+        <span className="hud-chip-label">Balance</span>
+        <span className="hud-chip-value">{formatMoney(state.balance)}</span>
+      </div>
+    </div>
+  );
 
+  return (
+    <>
+      {hudRootElement ? createPortal(hud, hudRootElement) : hud}
       <div className="game-controls-dock">
         <div className="game-controls-main">
           <div className="bet-block">
@@ -236,12 +240,12 @@ export function GameControlPanel() {
                 disabled={!canStart}
                 onClick={() => dispatchUiAction("START")}
               >
-                Start
+                START
               </button>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
