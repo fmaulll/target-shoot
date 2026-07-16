@@ -17,11 +17,28 @@ export class AssetManager {
       src: "/images/Gun.png",
     });
 
+
+    Assets.add({
+      alias: "gunIdleNoMovement",
+      src: "/images/Gun_Idle_No_Movement.png",
+    });
+    Assets.add({
+      alias: "gunIdleSheet",
+      src: "/images/Gun_Idle.json",
+    });
+
     Assets.add({
       alias: "crosshair",
       src: "/images/Crosshair.png",
     });
 
-    await Assets.load(["background", "barrelSheet", "gun", "crosshair"]);
+    await Assets.load([
+      "background",
+      "barrelSheet",
+      "gun",
+      "gunIdleSheet",
+      "crosshair",
+      "gunIdleNoMovement",
+    ]);
   }
 }

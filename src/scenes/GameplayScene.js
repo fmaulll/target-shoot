@@ -30,6 +30,7 @@ export class GameplayScene extends Scene {
     this.selectedTarget = null;
 
     this.gunTargetX = Screen.centerX;
+    this.gunRestX = Screen.centerX;
 
     this.hasShot = false;
 
@@ -93,7 +94,7 @@ export class GameplayScene extends Scene {
       this.layoutScene();
 
       if (!this.selectedTarget) {
-        this.gunTargetX = Screen.centerX;
+        this.gunTargetX = this.gunRestX;
       }
     };
 
@@ -371,12 +372,14 @@ export class GameplayScene extends Scene {
   resetRound(continuePlaying) {
     this.hasShot = false;
 
+    this.gun.setIdle();
+
     if (this.selectedTarget) {
       this.selectedTarget.setSelected(false);
       this.selectedTarget = null;
     }
 
-    this.gunTargetX = Screen.centerX;
+    this.gunTargetX = this.gunRestX;
 
     if (continuePlaying) {
       this.roundManager.start(this.currentDifficulty);
@@ -441,9 +444,13 @@ export class GameplayScene extends Scene {
     this.hasShot = false;
 
     this.setGameState(GameState.SHOOTING);
+    
+    this.gun.setShooting();
   }
 
   shoot(id) {
+    // this.gun.setShooting();
+
     this.gun.y += 20;
 
     setTimeout(() => {
@@ -497,7 +504,8 @@ export class GameplayScene extends Scene {
       const panelTop = this.getPanelTop();
       const maxGunY = panelTop - bottomOffset;
 
-      this.gun.x = Screen.centerX + rightOffset;
+      this.gunRestX = Screen.centerX + rightOffset;
+      this.gun.x = this.gunRestX;
       this.gun.y = Math.min(Screen.height - bottomOffset, maxGunY);
       this.gun.setResponsiveScale();
     }
@@ -507,7 +515,7 @@ export class GameplayScene extends Scene {
     }
 
     if (!this.selectedTarget) {
-      this.gunTargetX = Screen.centerX;
+      this.gunTargetX = this.gunRestX;
     }
   }
 
